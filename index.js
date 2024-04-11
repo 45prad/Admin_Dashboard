@@ -82,7 +82,7 @@ app.get('/track.gif', async (req, res) => {
         }
 
         // Respond with a 1x1 transparent GIF image
-        res.sendFile('pixel.gif', { root: __dirname });
+        res.sendFile('pixel.jpg', { root: __dirname });
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal server error');
@@ -96,7 +96,7 @@ app.post('/send-email', async (req, res) => {
         // Extract email data from the request body
         // const { to, subject, message } = req.body;
 
-        imageUrl = "http://localhost:5000/track.gif?userId=6617f54df3d0c8cc38c63b8b";
+        imageUrl = "https://phishingmails.onrender.com/track.gif?userId=6617f54df3d0c8cc38c63b8b";
 
         const htmlContent = `
         <!DOCTYPE html>
