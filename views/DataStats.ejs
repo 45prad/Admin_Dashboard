@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Stats</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .flex {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin: -10px;
+        }
+        .chart-container {
+            flex-basis: calc(20% - 20px);
+            margin: 10px;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex">
+        <!-- Canvas for Total Users -->
+        <div class="chart-container">
+            <h2>Total Users</h2>
+            <canvas id="totalUsersChart" height="100" width="100"></canvas>
+        </div>
+
+        <!-- Canvas for Link Open Count -->
+        <div class="chart-container">
+            <h2>Link Open Count</h2>
+            <canvas id="linkOpenCountChart" height="100" width="100"></canvas>
+        </div>
+
+        <!-- Canvas for Email Open Count -->
+        <div class="chart-container">
+            <h2>Email Open Count</h2>
+            <canvas id="emailOpenCountChart" height="100" width="100"></canvas>
+        </div>
+
+        <!-- Canvas for Attachment Open Count -->
+        <div class="chart-container">
+            <h2>Attachment Open Count</h2>
+            <canvas id="attachmentOpenCountChart" height="100" width="100"></canvas>
+        </div>
+
+        <!-- Canvas for Submitted Data -->
+        <div class="chart-container">
+            <h2>Submitted Data</h2>
+            <canvas id="submittedDataChart" height="100" width="100"></canvas>
+        </div>
+
+        <!-- Canvas for Donut Chart -->
+        <div class="chart-container">
+            <h2>Link Open Count Percentage</h2>
+            <canvas id="linkOpenCountPercentageChart" height="100" width="100"></canvas>
+        </div>
+    </div>
+
+    <script>
+        fetch('/aggregate-user-stats')
+            .then(response => response.json())
+            .then(data => {
+                const { totalUsers, totalLinkOpenCount, totalEmailOpenCount, totalAttachmentOpenCount, totalSubmittedData } = data;
+
+                // Function to create a pie chart
+                function createPieChart(canvasId, label, value) {
+                    const ctx = document.getElementById(canvasId).getContext('2d');
+                    return new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: [label, ''],
+                            datasets: [{
+                                data: [value, totalUsers - value],
+                                backgroundColor: ['#36a2eb', '#FFCE56']
+                            }]
+                        },
+                        options: {
+                            cutoutPercentage: 70,
+                            responsive: true,
+                            legend: {
+                                display: false
+                            }
+                        }
+                    });
+                }
+
+                // Create pie charts for each data count
+                createPieChart('totalUsersChart', 'Total Users', totalUsers);
+                createPieChart('linkOpenCountChart', 'Link Open Count', totalLinkOpenCount);
+                createPieChart('emailOpenCountChart', 'Email Open Count', totalEmailOpenCount);
+                createPieChart('attachmentOpenCountChart', 'Attachment Open Count', totalAttachmentOpenCount);
+                createPieChart('submittedDataChart', 'Submitted Data', totalSubmittedData);
+
+                // Calculate percentage of link open count
+                const linkOpenCountPercentage = (totalLinkOpenCount / totalUsers) * 100;
+
+                // Create donut chart for link open count percentage
+                const ctxDonut = document.getElementById('linkOpenCountPercentageChart').getContext('2d');
+                const linkOpenCountChart = new Chart(ctxDonut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Link Open Count', 'Total Users'],
+                        datasets: [{
+                            data: [linkOpenCountPercentage, 100 - linkOpenCountPercentage],
+                            backgroundColor: ['#FF6384', '#c2c4c3']
+                        }]
+                    },
+                    options: {
+                        cutoutPercentage: 10, // Reduced width of the donut
+                        responsive: true,
+                        legend: {
+                            display: false
+                        },
+                        plugins: {
+                            datalabels: {
+                                formatter: (value, context) => {
+                                    if (context.dataIndex === 0) {
+                                        return totalLinkOpenCount;
+                                    }
+                                },
+                                color: '#000',
+                                anchor: 'center',
+                                align: 'center',
+                                font: {
+                                    weight: 'bold',
+                                    size: 16 // Adjusted font size
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Add linkOpenCount value to center of donut chart
+                linkOpenCountChart.canvas.parentNode.style.width = '100px'; // Adjusted width
+                linkOpenCountChart.canvas.parentNode.style.height = '100px'; // Adjusted height
+                linkOpenCountChart.ctx.textAlign = 'center';
+                linkOpenCountChart.ctx.textBaseline = 'middle';
+                linkOpenCountChart.ctx.fillText(totalLinkOpenCount, linkOpenCountChart.width / 2, linkOpenCountChart.height / 2);
+            });
+    </script>
+</body>
+</html>

@@ -18,6 +18,14 @@ const userSchema = new mongoose.Schema({
     attachmentOpenCount: {
         type: Number,
         default: 0 // Default value is 0
+    },
+    submittedData: {
+        type: Number,
+        default: 0
+    },
+    reportedSpam: {
+        type: Boolean,
+        default: false
     }
 });
 

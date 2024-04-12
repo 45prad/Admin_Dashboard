@@ -3,13 +3,25 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const User = require('./models/User');
 const sendMail = require('./utils/sendMail');
+const path = require('path')
 
 
 connectToMongo();
 const app = express()
 app.use(bodyParser.json());
 
+// handling static files 
+app.use(express.static(path.join(process.cwd(), 'public')));
+
+// handling ejs specific stuff
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'))
+
 const port = 5000
+
+app.get('/', (req, res) =>{
+    res.render('DataStats.ejs')
+})
 
 app.post('/users', async (req, res) => {
     try {
@@ -42,6 +54,23 @@ app.post('/users', async (req, res) => {
     }
 });
 
+app.get('/users-emails', async (req, res) => {
+    try {
+        // Fetch all users from the database
+        const users = await User.find({}, 'emailId'); // Assuming the email field is named 'email' in the User model
+
+        // Extract emails from the users
+        const emails = users.map(user => user.emailId);
+
+        // Send the list of emails as JSON response
+        res.json(emails);
+    } catch (error) {
+        // Handle errors
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 // Defined API endpoint to increment linkOpenCount
 app.get('/incrementLinkOpenCount/:userId', async (req, res) => {
     try {
@@ -61,7 +90,8 @@ app.get('/incrementLinkOpenCount/:userId', async (req, res) => {
         await user.save();
 
         // Send a success response
-        res.status(200).json({ message: 'linkOpenCount incremented successfully', user });
+        // res.status(200).json({ message: 'linkOpenCount incremented successfully', user });
+        res.render('Signin.ejs', {data: userId});
     } catch (error) {
         // If an error occurs, send an error response
         console.error(error);
@@ -91,6 +121,59 @@ app.get('/incrementAttachmentOpenCount/:userId', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+// Defined route to handle form submission
+app.post('/login', async (req, res) => {
+    try {
+      const { username, password, userId } = req.body;
+  
+      // Update the submittedData field for the user with the provided userId
+      await User.findByIdAndUpdate(userId, { $inc: { submittedData: 1 } });
+  
+      // You can add additional logic here for authentication, etc.
+  
+      res.status(200).json({ message: 'Form submitted successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+// Defined API endpoint to fetch aggregated user stats
+app.get('/aggregate-user-stats', async (req, res) => {
+    try {
+        // Aggregate data from all users
+        const aggregateStats = await User.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalUsers: { $sum: 1 }, // Total number of users
+                    totalLinkOpenCount: { $sum: { $cond: { if: { $gt: ['$linkOpenCount', 0] }, then: 1, else: 0 } } },
+                    totalEmailOpenCount: { $sum: { $cond: { if: { $gt: ['$emailOpenCount', 0] }, then: 1, else: 0 } }  },
+                    totalAttachmentOpenCount: { $sum: { $cond: { if: { $gt: ['$attachmentOpenCount', 0] }, then: 1, else: 0 } }  },
+                    totalSubmittedData: { $sum: { $cond: { if: { $gt: ['$submittedData', 0] }, then: 1, else: 0 } }  }
+                }
+            }
+        ]);
+
+        // Extract aggregated data
+        const { totalUsers, totalLinkOpenCount, totalEmailOpenCount, totalAttachmentOpenCount, totalSubmittedData } = aggregateStats[0];
+
+        // Calculate percentages
+        const linkOpenPercentage = (totalLinkOpenCount / totalUsers) * 100;
+        const emailOpenPercentage = (totalEmailOpenCount / totalUsers) * 100;
+        const attachmentOpenPercentage = (totalAttachmentOpenCount / totalUsers) * 100;
+
+        // Return the aggregated data as JSON
+        res.json({ totalUsers, totalLinkOpenCount, totalEmailOpenCount, totalAttachmentOpenCount, totalSubmittedData });
+    } catch (error) {
+        // Handle errors
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+
 
 // Route to handle tracking requests
 app.get('/track.gif', async (req, res) => {
