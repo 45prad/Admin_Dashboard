@@ -57,13 +57,10 @@ app.post('/users', async (req, res) => {
 app.get('/users-emails', async (req, res) => {
     try {
         // Fetch all users from the database
-        const users = await User.find({}, 'emailId'); // Assuming the email field is named 'email' in the User model
+        const users = await User.find({}, '_id emailId'); // Assuming the fields are named '_id' and 'email' in the User model
 
-        // Extract emails from the users
-        const emails = users.map(user => user.emailId);
-
-        // Send the list of emails as JSON response
-        res.json(emails);
+        // Send the list of users with their IDs and emails as JSON response
+        res.json(users);
     } catch (error) {
         // Handle errors
         console.error(error);
