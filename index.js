@@ -22,6 +22,9 @@ const port = 5000
 app.get('/', (req, res) =>{
     res.render('DataStats.ejs')
 })
+app.get('/reported', (req, res) =>{
+    res.render('reports.ejs')
+})
 
 app.post('/users', async (req, res) => {
     try {
@@ -258,6 +261,33 @@ app.post('/send-email', async (req, res) => {
         // If an error occurs, send an error response
         console.error(error);
         res.status(500).json({ message: 'Failed to send email' });
+    }
+});
+
+app.put('/accept-report/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        
+        // Find the user by ID
+        const user = await User.findById(userId);
+
+        // If user not found, return 404
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Update reportedSpam to true
+        user.reportedSpam = true;
+
+        // Save the updated user
+        await user.save();
+
+        // Send updated user object as response
+        res.json(user);
+    } catch (error) {
+        // Handle errors
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
 

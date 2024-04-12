@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Emails</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-blue-900 text-white flex justify-between items-center p-4 shadow">
+        <div class="navbar-left">
+            <a href="/reported" id="reportLink" class="text-white hover:bg-blue-800 px-3 py-2 rounded-md text-sm font-medium">Reports</a>
+            <a href="/" id="analysisLink" class="text-white hover:bg-blue-800 px-3 py-2 rounded-md text-sm font-medium">Analysis</a>
+        </div>
+        <div class="navbar-right">
+            <button id="signOutBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">Sign Out</button>
+        </div>
+    </nav>
+    <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 mt-12">
+        <h1 class="text-xl font-semibold mb-4">User Emails</h1>
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto">
+                <thead>
+                    <tr>
+                        <th class="border px-4 py-2">#</th>
+                        <th class="border px-4 py-2">User ID</th>
+                        <th class="border px-4 py-2">Email</th>
+                        <th class="border px-4 py-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="userList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch users' emails from the server
+        async function fetchUserEmails() {
+            try {
+                const response = await fetch('/users-emails');
+                const users = await response.json();
+                displayUsers(users);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Function to display users on the screen
+        function displayUsers(users) {
+            const userListBody = document.getElementById('userList');
+            userListBody.innerHTML = ''; // Clear previous content
+
+            // Loop through each user
+            users.forEach((user, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="border px-4 py-2">${index + 1}</td>
+                    <td class="border px-4 py-2">${user._id}</td>
+                    <td class="border px-4 py-2">${user.emailId}</td>
+                    <td class="border px-4 py-2">
+                        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2" onclick="handleAction('${user._id}', 'accept')">Accept</button>
+                    </td>
+                `;
+                userListBody.appendChild(row);
+            });
+        }
+
+        // Function to handle accept action
+        async function handleAction(userId, action) {
+            try {
+                const response = await fetch(`/accept-report/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action })
+                });
+                if (response.ok) {
+                    console.log(`Action "${action}" performed for user ID: ${userId}`);
+                    fetchUserEmails(); // Refresh the user list after performing the action
+                } else {
+                    console.error(`Failed to perform action "${action}" for user ID: ${userId}`);
+                }
+            } catch (error) {
+                console.error(`Error while performing action "${action}" for user ID: ${userId}`, error);
+            }
+        }
+
+        // Fetch users' emails when the page loads
+        fetchUserEmails();
+    </script>
+</body>
+</html>

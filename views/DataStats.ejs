@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Stats</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> -->
     <style>
         .flex {
             display: flex;
@@ -15,49 +16,138 @@
         .chart-container {
             flex-basis: calc(20% - 20px);
             margin: 10px;
+            /*width: 100px;  Adjusted width */
+            /*height: 100px;  Adjusted height */
         }
         canvas {
             max-width: 100%;
             height: auto;
         }
+
+        body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar {
+  background-color: #003366;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar a {
+  text-decoration: none;
+  color: white;
+  padding: 10px;
+  transition: background-color 0.3s;
+}
+
+.navbar a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+.navbar-right button {
+  background-color: #5cb85c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.navbar-right button:hover {
+  background-color: #4cae4c;
+}
+
+#content {
+  padding: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+  color: #333;
+}
+
+.mark-button {
+  background-color: #ff6347; /* Coral color */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.mark-button:hover {
+  background-color: #d14836; /* Darker shade of coral */
+}
+
     </style>
 </head>
 <body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="/reported" id="reportLink">Reports</a>
+            <a href="/" id="analysisLink">Analysis</a>
+        </div>
+        <div class="navbar-right">
+            <button id="signOutBtn">Sign Out</button>
+        </div>
+      </nav>
+    
     <div class="flex">
         <!-- Canvas for Total Users -->
         <div class="chart-container">
             <h2>Total Users</h2>
-            <canvas id="totalUsersChart" height="100" width="100"></canvas>
+            <canvas id="totalUsersChart"></canvas>
         </div>
 
         <!-- Canvas for Link Open Count -->
         <div class="chart-container">
             <h2>Link Open Count</h2>
-            <canvas id="linkOpenCountChart" height="100" width="100"></canvas>
+            <canvas id="linkOpenCountChart"></canvas>
         </div>
 
         <!-- Canvas for Email Open Count -->
         <div class="chart-container">
             <h2>Email Open Count</h2>
-            <canvas id="emailOpenCountChart" height="100" width="100"></canvas>
+            <canvas id="emailOpenCountChart"></canvas>
         </div>
 
         <!-- Canvas for Attachment Open Count -->
         <div class="chart-container">
             <h2>Attachment Open Count</h2>
-            <canvas id="attachmentOpenCountChart" height="100" width="100"></canvas>
+            <canvas id="attachmentOpenCountChart"></canvas>
         </div>
 
         <!-- Canvas for Submitted Data -->
         <div class="chart-container">
             <h2>Submitted Data</h2>
-            <canvas id="submittedDataChart" height="100" width="100"></canvas>
+            <canvas id="submittedDataChart"></canvas>
         </div>
 
         <!-- Canvas for Donut Chart -->
         <div class="chart-container">
             <h2>Link Open Count Percentage</h2>
-            <canvas id="linkOpenCountPercentageChart" height="100" width="100"></canvas>
+            <canvas id="linkOpenCountPercentageChart"></canvas>
         </div>
     </div>
 
@@ -67,40 +157,59 @@
             .then(data => {
                 const { totalUsers, totalLinkOpenCount, totalEmailOpenCount, totalAttachmentOpenCount, totalSubmittedData } = data;
 
-                // Function to create a pie chart
-                function createPieChart(canvasId, label, value) {
+                // Function to create a donut chart
+                function createDonutChart(canvasId, label, value, actualCount) {
                     const ctx = document.getElementById(canvasId).getContext('2d');
                     return new Chart(ctx, {
-                        type: 'pie',
+                        type: 'doughnut',
                         data: {
                             labels: [label, ''],
                             datasets: [{
                                 data: [value, totalUsers - value],
-                                backgroundColor: ['#36a2eb', '#FFCE56']
+                                backgroundColor: ['#ad330a',  '#c2c4c3']
                             }]
                         },
                         options: {
-                            cutoutPercentage: 70,
+                            cutoutPercentage: 80, // Reduced width of the donut
                             responsive: true,
                             legend: {
                                 display: false
+                            },
+                            plugins: {
+                                beforeDraw: function(chart) {
+                                    var width = chart.chart.width,
+                                        height = chart.chart.height,
+                                        ctx = chart.chart.ctx;
+
+                                    ctx.restore();
+                                    var fontSize = (height / 114).toFixed(2);
+                                    ctx.font = fontSize + "em sans-serif";
+                                    ctx.textBaseline = "middle";
+
+                                    var text = actualCount,
+                                        textX = Math.round((width - ctx.measureText(text).width) / 2),
+                                        textY = height / 2;
+
+                                    ctx.fillText(text, textX, textY);
+                                    ctx.save();
+                                }
                             }
                         }
                     });
                 }
 
-                // Create pie charts for each data count
-                createPieChart('totalUsersChart', 'Total Users', totalUsers);
-                createPieChart('linkOpenCountChart', 'Link Open Count', totalLinkOpenCount);
-                createPieChart('emailOpenCountChart', 'Email Open Count', totalEmailOpenCount);
-                createPieChart('attachmentOpenCountChart', 'Attachment Open Count', totalAttachmentOpenCount);
-                createPieChart('submittedDataChart', 'Submitted Data', totalSubmittedData);
+                // Create donut charts for each data count
+                createDonutChart('totalUsersChart', 'Total Users', totalUsers);
+                createDonutChart('linkOpenCountChart', 'Link Open Count', totalLinkOpenCount, totalLinkOpenCount);
+                createDonutChart('emailOpenCountChart', 'Email Open Count', totalEmailOpenCount, totalEmailOpenCount);
+                createDonutChart('attachmentOpenCountChart', 'Attachment Open Count', totalAttachmentOpenCount, totalAttachmentOpenCount);
+                createDonutChart('submittedDataChart', 'Submitted Data', totalSubmittedData, totalSubmittedData);
 
                 // Calculate percentage of link open count
                 const linkOpenCountPercentage = (totalLinkOpenCount / totalUsers) * 100;
 
-                // Create donut chart for link open count percentage
-                const ctxDonut = document.getElementById('linkOpenCountPercentageChart').getContext('2d');
+                 // Create donut chart for link open count percentage
+                 const ctxDonut = document.getElementById('linkOpenCountPercentageChart').getContext('2d');
                 const linkOpenCountChart = new Chart(ctxDonut, {
                     type: 'doughnut',
                     data: {
@@ -111,7 +220,7 @@
                         }]
                     },
                     options: {
-                        cutoutPercentage: 10, // Reduced width of the donut
+                        cutoutPercentage: 80, // Reduced width of the donut
                         responsive: true,
                         legend: {
                             display: false
@@ -134,13 +243,8 @@
                         }
                     }
                 });
-
-                // Add linkOpenCount value to center of donut chart
-                linkOpenCountChart.canvas.parentNode.style.width = '100px'; // Adjusted width
-                linkOpenCountChart.canvas.parentNode.style.height = '100px'; // Adjusted height
-                linkOpenCountChart.ctx.textAlign = 'center';
-                linkOpenCountChart.ctx.textBaseline = 'middle';
-                linkOpenCountChart.ctx.fillText(totalLinkOpenCount, linkOpenCountChart.width / 2, linkOpenCountChart.height / 2);
+                
+                // const linkOpenCountChart = createDonutChart('linkOpenCountPercentageChart', 'Link Open Count Percentage', linkOpenCountPercentage, totalLinkOpenCount);
             });
     </script>
 </body>
