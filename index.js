@@ -71,73 +71,73 @@ app.get('/users-emails', async (req, res) => {
     }
 });
 
-// Defined API endpoint to increment linkOpenCount
-app.get('/incrementLinkOpenCount/:userId', async (req, res) => {
-    try {
-        // Extract userId from request parameters
-        const userId = req.params.userId;
+// // Defined API endpoint to increment linkOpenCount
+// app.get('/incrementLinkOpenCount/:userId', async (req, res) => {
+//     try {
+//         // Extract userId from request parameters
+//         const userId = req.params.userId;
 
-        // Find the user by userId
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+//         // Find the user by userId
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
 
-        // Increment the linkOpenCount
-        user.linkOpenCount += 1;
+//         // Increment the linkOpenCount
+//         user.linkOpenCount += 1;
 
-        // Save the updated user to the database
-        await user.save();
+//         // Save the updated user to the database
+//         await user.save();
 
-        // Send a success response
-        // res.status(200).json({ message: 'linkOpenCount incremented successfully', user });
-        res.render('Signin.ejs', {data: userId});
-    } catch (error) {
-        // If an error occurs, send an error response
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
+//         // Send a success response
+//         // res.status(200).json({ message: 'linkOpenCount incremented successfully', user });
+//         res.render('Signin.ejs', {data: userId});
+//     } catch (error) {
+//         // If an error occurs, send an error response
+//         console.error(error);
+//         res.status(500).json({ message: 'Internal server error' });
+//     }
+// });
 
-// Defined API endpoint to increment attachmentOpenCount
-app.get('/incrementAttachmentOpenCount/:userId', async (req, res) => {
-    try {
-        // Extract userId from request parameters
-        const userId = req.params.userId;
+// // Defined API endpoint to increment attachmentOpenCount
+// app.get('/incrementAttachmentOpenCount/:userId', async (req, res) => {
+//     try {
+//         // Extract userId from request parameters
+//         const userId = req.params.userId;
 
-        // Find the user by userId
-        const user = await User.findById(userId);
+//         // Find the user by userId
+//         const user = await User.findById(userId);
 
-        if (user) {
-            user.attachmentOpenCount += 1;
-            await user.save();
-        }
+//         if (user) {
+//             user.attachmentOpenCount += 1;
+//             await user.save();
+//         }
 
-        // Respond with a 1x1 transparent GIF image
-        res.sendFile('pixel.jpg', { root: __dirname });
-    } catch (error) {
-        // If an error occurs, send an error response
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
+//         // Respond with a 1x1 transparent GIF image
+//         res.sendFile('pixel.jpg', { root: __dirname });
+//     } catch (error) {
+//         // If an error occurs, send an error response
+//         console.error(error);
+//         res.status(500).json({ message: 'Internal server error' });
+//     }
+// });
 
-// Defined route to handle form submission
-app.post('/login', async (req, res) => {
-    try {
-      const { username, password, userId } = req.body;
+// // Defined route to handle form submission
+// app.post('/login', async (req, res) => {
+//     try {
+//       const { username, password, userId } = req.body;
   
-      // Update the submittedData field for the user with the provided userId
-      await User.findByIdAndUpdate(userId, { $inc: { submittedData: 1 } });
+//       // Update the submittedData field for the user with the provided userId
+//       await User.findByIdAndUpdate(userId, { $inc: { submittedData: 1 } });
   
-      // You can add additional logic here for authentication, etc.
+//       // You can add additional logic here for authentication, etc.
   
-      res.status(200).json({ message: 'Form submitted successfully' });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
+//       res.status(200).json({ message: 'Form submitted successfully' });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ message: 'Internal server error' });
+//     }
+//   });
   
 // Defined API endpoint to fetch aggregated user stats
 app.get('/aggregate-user-stats', async (req, res) => {
